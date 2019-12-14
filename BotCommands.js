@@ -6,8 +6,6 @@ class FunctionObject {
   ShowHelpMenu	( NO_ARGUMENTS ){ 	ShowHelpMenu( ); 				}
   ChangePrefix	( sNewPrefix ){ 	ChangePrefix( sNewPrefix ); 	}
   ShowShortcuts	( NO_ARGUMENTS ){ 	ShowShortcuts( ); 				}
-  Open			( sLink ){ 			Open( sLink ); 					}
-  Google		( sKeywords ){ 		Google( sKeywords ); 			}
   SpamMessage	( sMsg_and_iIt ){	SpamMessage( sMsg_and_iIt );	}
   
 }
