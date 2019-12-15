@@ -104,7 +104,7 @@ function WaveMessage( sMessage ){
   for( let i = 1; i <= sMessage.length; i++ )
     Send( sMessage.slice( 0, i ) );
 
-  for( let j = sMessage.length; j > 0; j-- )
+  for( let j = sMessage.length - 1; j > 0; j-- )
 	Send( sMessage.slice( 0, j ) );
   
 }
