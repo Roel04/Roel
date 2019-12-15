@@ -7,6 +7,8 @@ class FunctionObject {
   ChangePrefix	( sNewPrefix ){ 	ChangePrefix( sNewPrefix ); 	}
   ShowShortcuts	( NO_ARGUMENTS ){ 	ShowShortcuts( ); 				}
   SpamMessage	( sMsg_and_iIt ){	SpamMessage( sMsg_and_iIt );	}
+  WaveMessage	( sMessage ){		WaveMessage( sMessage );		}
+  CharMessage	( sMessage ){		CharMessage( sMessage );		}
   
 }
 
@@ -18,8 +20,9 @@ let aFunctions =
   [ "[p]help" , "Show this menu" , [ "[p]h" ] ],
   [ "[p]prefix [new prefix]" , "Change the prefix", [ "[p]pre" , "[p]p" ] ],
   [ "[p]shortcuts" , "Show the shortcut of every command" , [ "[p]short" ] ],
-  [ "[p]spam [message] [amount of times]" , "Spam a message an x amount of times" , [ "[p]s" ] ]
-  
+  [ "[p]spam [message] [amount of times]" , "Spam a message an x amount of times" , [ "[p]s" ] ],
+  [ "[p]wave [message]" , "Send a message like a wave" , [ "[p]w" ] ],
+  [ "[p]char [message]" , "Send a message for every char" , [ "[p]ch" ] ]
 ];
 
 let aCallFuncs = 
@@ -27,7 +30,9 @@ let aCallFuncs =
   [ "help" , "h" , "ShowHelpMenu" ],
   [ "prefix" , "pre" , "p" , "ChangePrefix" ],
   [ "shortcuts" , "short" , "ShowShortcuts" ],
-  [ "spam" , "s" , "SpamMessage" ]
+  [ "spam" , "s" , "SpamMessage" ],
+  [ "wave" , "w" , "WaveMessage" ],
+  [ "char" , "ch" , "CharMessage" ]
 ];
 
 function ShowHelpMenu( NO_ARGUMENTS ){
@@ -75,13 +80,45 @@ function ShowShortcuts( NO_ARGUMENTS ){
 /////////////////////////   Spam function  /////////////////////////
 
 function SpamMessage( sMessage_and_iIterations ){
+    
+  let sSpaces = sMessage_and_iIterations.split( ' ' );
   
-  let sMessage = sMessage_and_iIterations.slice( 0 , sMessage_and_iIterations.indexOf( ' ' ) );
+  let iSpaces = sMessage_and_iIterations.indexOf( sSpaces[ sSpaces.length - 1 ] );
+
+  let sMessage = sMessage_and_iIterations.slice( 0 , iSpaces - 1 );
   
-  let iIterations = sMessage_and_iIterations.slice( sMessage_and_iIterations.indexOf( ' ' ) + 1 );
-  
+  let iIterations = sMessage_and_iIterations.slice( iSpaces );
+
   for( let i = 0; i < iIterations; i++ )
-	Send( sMessage );
+    Send( sMessage );
+ 
+}
+
+
+
+/////////////////////////   Wave message function   /////////////////////////
+
+function WaveMessage( sMessage ){
+  
+  
+  for( let i = 1; i <= sMessage.length; i++ )
+    Send( sMessage.slice( 0, i ) );
+
+  for( let j = sMessage.length; j > 0; j-- )
+	Send( sMessage.slice( 0, j ) );
+  
+}
+
+
+
+/////////////////////////   Char message function   /////////////////////////
+
+function CharMessage( sMessage ){
+
+  let sM = sMessage.split( ' ' ).join( '' );
+
+  for( let i = 0; i < sM.length; i++ )
+    Send( sM[ i ] );
 
 }
 
@@ -182,7 +219,7 @@ setInterval(
     if( sOldText != sNewText ){
 	  
 	  sOldText = sNewText;
-	  ProcessMessage( GetLatestMessage( ) );
+	  ProcessMessage( GetLatestMessage( ).split( '&amp;' ).join( '&' ) );
 	
     }
   
@@ -203,7 +240,3 @@ function Main( ){
 }
 
 Main( );
-
-
-
-
