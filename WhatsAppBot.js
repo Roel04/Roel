@@ -15,17 +15,21 @@ class FunctionObject {
 
 /////////////////////////   Help function   /////////////////////////
 
-let aFunctions = 
+const iIt_limit = 100;
+
+const iChar_limit = 50;
+
+const aFunctions = 
 [
-  [ "[p]help" , "Show this menu" , [ "[p]h" ] ],
-  [ "[p]prefix [new prefix]" , "Change the prefix", [ "[p]pre" , "[p]p" ] ],
-  [ "[p]shortcuts" , "Show the shortcut of every command" , [ "[p]short" ] ],
-  [ "[p]spam [message] [amount of times]" , "Spam a message an x amount of times" , [ "[p]s" ] ],
-  [ "[p]wave [message]" , "Send a message like a wave" , [ "[p]w" ] ],
-  [ "[p]char [message]" , "Send a message for every char" , [ "[p]ch" ] ]
+  [ "[p]help" , "" , "Show this menu" , [ "[p]h" ] ],
+  [ "[p]prefix" , "[new prefix]" , "Change the prefix", [ "[p]pre" , "[p]p" ] ],
+  [ "[p]shortcuts" , "" , "Show the shortcut of every command" , [ "[p]short" ] ],
+  [ "[p]spam" , "[message] [amount of times {max = "+iIt_limit+"}]" , "Spam a message an x amount of times" , [ "[p]s" ] ],
+  [ "[p]wave" , "[message {max length = "+iChar_limit+"}]" , "Send a message like a wave" , [ "[p]w" ] ],
+  [ "[p]char" , "[message {max length = "+iChar_limit+"}]" , "Send a message for every char" , [ "[p]ch" ] ]
 ];
 
-let aCallFuncs = 
+const aCallFuncs = 
 [
   [ "help" , "h" , "ShowHelpMenu" ],
   [ "prefix" , "pre" , "p" , "ChangePrefix" ],
@@ -35,12 +39,28 @@ let aCallFuncs =
   [ "char" , "ch" , "CharMessage" ]
 ];
 
+
+
+/////////////////////////   Prefix Stuff   /////////////////////////
+
+function BotErrorMessage( sError , sSolution ){
+  
+  Send( 
+    `*Botje says*: _"Woooops, it looks like you have ${ sError }. You can prevent this by ${ sSolution }. Sorry for the inconvenience."_` 
+  );
+  
+}
+
+
+
+/////////////////////////   Show help menu   /////////////////////////
+
 function ShowHelpMenu( NO_ARGUMENTS ){
   
-  let sMessage = "Help menu ( [p] = prefix )\n\n";
+  let sMessage = "Help menu ( [p] = prefix (default = !) )\n\n";
   
   for( let i of aFunctions )
-	sMessage += `${i[0]}: ${i[1]}\n\n`;
+	sMessage += `${i[0]} ${i[1]}: ${i[2]}\n\n`;
 	
   Send( sMessage );
   
@@ -69,7 +89,7 @@ function ShowShortcuts( NO_ARGUMENTS ){
   let sMessage = "";
   
   for( let i of aFunctions )
-	sMessage += `Shortcut(s) for ${i[0]}: ${i[2]}\n\n`;
+	sMessage += `Shortcut(s) for ${i[0]}: ${i[3]}\n\n`;
 
   Send( sMessage );
   
@@ -80,6 +100,9 @@ function ShowShortcuts( NO_ARGUMENTS ){
 /////////////////////////   Spam function  /////////////////////////
 
 function SpamMessage( sMessage_and_iIterations ){
+	
+  let bError_Iterations = false;
+  let bError_Command = false;
     
   let sSpaces = sMessage_and_iIterations.split( ' ' );
   
@@ -88,9 +111,44 @@ function SpamMessage( sMessage_and_iIterations ){
   let sMessage = sMessage_and_iIterations.slice( 0 , iSpaces - 1 );
   
   let iIterations = sMessage_and_iIterations.slice( iSpaces );
+  
+  if( iIterations > iIt_limit ){
+	  
+	  iIterations = iIt_limit;
+	  
+	  bError_Iterations = true;
+	  
+  }
+  
+  for( let aA of aCallFuncs ){
+	for( let sB of aA ){
+	  if( new RegExp( sPrefix + sB , ).test( sMessage.toLowerCase( ) ) ){
+		
+		sMessage = sMessage.split( sPrefix + sB ).join( sB );
+		
+		bError_Command = true;
+		
+	  }	
+
+	}	  
+
+  }
+		
 
   for( let i = 0; i < iIterations; i++ )
     Send( sMessage );
+ 
+  if( bError_Iterations )
+	BotErrorMessage( 
+	  `exeeded the iteration limit of ${ iIt_limit }` , 
+	  `entering a number below ${ iIt_limit }`
+	);
+	  
+  if( bError_Command )
+	BotErrorMessage(
+	  `written a command inside your command, which I can't tolerate` ,
+	  `not trying to let me execute a command inside your command`
+	);
  
 }
 
@@ -99,13 +157,28 @@ function SpamMessage( sMessage_and_iIterations ){
 /////////////////////////   Wave message function   /////////////////////////
 
 function WaveMessage( sMessage ){
+	
+  let bError = false;
   
+  if( sMessage.length > iChar_limit ){
+	
+	sMessage = sMessage.slice( 0, iChar_limit - 1 );
+	
+	bError = true;
+  
+  }
   
   for( let i = 1; i <= sMessage.length; i++ )
     Send( sMessage.slice( 0, i ) );
 
   for( let j = sMessage.length - 1; j > 0; j-- )
 	Send( sMessage.slice( 0, j ) );
+  
+  if( bError )
+	  BotErrorMessage(
+	  `exeeded the character limit of ${iChar_limit}` ,
+	  `writing shorter messages`
+	);
   
 }
 
@@ -114,12 +187,28 @@ function WaveMessage( sMessage ){
 /////////////////////////   Char message function   /////////////////////////
 
 function CharMessage( sMessage ){
+	
+  let bError = false;
 
   let sM = sMessage.split( ' ' ).join( '' );
 
+  if( sM.length > iChar_limit ){
+	
+	sM = sM.slice( 0, iChar_limit - 1 );
+	
+	bError = true;
+  
+  }
+  
   for( let i = 0; i < sM.length; i++ )
     Send( sM[ i ] );
-
+  
+  if( bError )
+	  BotErrorMessage(
+	  `exeeded the character limit of ${iChar_limit}` ,
+	  `writing shorter messages`
+	);
+  
 }
 
 
@@ -167,7 +256,18 @@ function ProcessMessage( sMessage ){
     //call the command's function
     let callFunction = new FunctionObject();
 	
-	callFunction[ sCommand ]( sArgument );
+	try {
+	
+      callFunction[ sCommand ]( sArgument );
+	
+	} catch( e ){
+	  
+	  BotErrorMessage( 
+	    'entered a wrong command' , 
+		'writing the command correctly' 
+	  );
+	
+	}
 	
   }
   
@@ -191,13 +291,23 @@ function Send( input ) {
 
 /////////////////////////   Get the latest message   /////////////////////////
 
-// GetLatestMessage gets the last message that you've received and returns it as a string
+// GetLatestMessage gets the last message that you've send or recieved and returns it as a string
 function GetLatestMessage( ){
 	
-	//return document.querySelector( `#main > div > div > div > div > div.message-out:nth-last-of-type(1) > div > div > div > div > div > span > span` ).innerHTML;
   return document.querySelector( `#main > div > div > div > div > div:nth-last-of-type(1) > div > div > div > div > div > span > span` ).innerHTML;
   
 }
+
+
+
+/////////////////////////   Get the at time af the latest message   /////////////////////////
+
+// GetLatestMessageTime gets the time of the latest message that has been send or recieved
+function GetLatestMessageTime( ){
+  
+  return document.querySelector( `#main > div > div > div > div > div:nth-last-of-type(1) > div > div > div > div > div > span[dir='auto']` ).innerHTML;
+  
+}	
 
 
 
@@ -235,7 +345,7 @@ function Main( ){
   
   let chatName = document.querySelector( "#main > header > div[role='button'] > div > div > span[dir='auto']" ).innerHTML;
   
-  Send( `The bot 'botje' is set up and bound to the chat: "${chatName}".\nUse !help to see the commands you can use.\nCreated by Roel` );
+  Send( `The bot 'Botje' is set up and bound to the chat: "${chatName}".\nUse !help to see the commands you can use.\nCreated by Roel` );
   
 }
 
