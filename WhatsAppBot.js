@@ -15,9 +15,13 @@ class FunctionObject {
 
 /////////////////////////   Help function   /////////////////////////
 
-const iIt_limit = 100;
+let sPrefix = "!";
 
-const iChar_limit = 50;
+let aMessageQueue = [];
+
+const iIt_limit = 1000;
+
+const iChar_limit = 100;
 
 const aFunctions = 
 [
@@ -45,9 +49,9 @@ const aCallFuncs =
 
 function BotErrorMessage( sError , sSolution ){
   
-  Send( 
+  /*Send( 
     `*Botje says*: _"Woooops, it looks like you have ${ sError }. You can prevent this by ${ sSolution }. Sorry for the inconvenience."_` 
-  );
+  );*/
   
 }
 
@@ -69,14 +73,12 @@ function ShowHelpMenu( NO_ARGUMENTS ){
 
 
 /////////////////////////   Prefix Stuff   /////////////////////////
-
-let sPrefix = "!";
  
 function ChangePrefix( sNewPrefix ){
   
   Send( `The prefix has changed from "${ sPrefix }" to "${ sNewPrefix.split(' ').join('').toLowerCase() }"` );
   
-  sPrefix = sNewPrefix.split(' ').join('').toLowerCase();
+  sPrefix = ( sNewPrefix != '' )? sNewPrefix.split(' ').join('').toLowerCase() : sPrefix;
   
 }
 
@@ -100,10 +102,16 @@ function ShowShortcuts( NO_ARGUMENTS ){
 /////////////////////////   Spam function  /////////////////////////
 
 function SpamMessage( sMessage_and_iIterations ){
-	
+  
   let bError_Iterations = false;
   let bError_Command = false;
     
+  if( sMessage_and_iIterations.split( ' ' ).length === 1 || !(/\d/.test( sMessage_and_iIterations[ sMessage_and_iIterations.length - 1 ] ) ) ){
+	
+	sMessage_and_iIterations += ' 10';
+	
+  }
+	
   let sSpaces = sMessage_and_iIterations.split( ' ' );
   
   let iSpaces = sMessage_and_iIterations.indexOf( sSpaces[ sSpaces.length - 1 ] );
@@ -135,19 +143,18 @@ function SpamMessage( sMessage_and_iIterations ){
   }
 		
 
-  for( let i = 0; i < iIterations; i++ )
-    Send( sMessage );
+  aMessageQueue.push( [sMessage, iIterations] );
  
   if( bError_Iterations )
 	BotErrorMessage( 
-	  `exeeded the iteration limit of ${ iIt_limit }` , 
-	  `entering a number below ${ iIt_limit }`
+	  `exeeded the iteration limit of ${ iIt_limit } or didn' enter a number` , 
+	  `entering a number below ${ iIt_limit } the next time`
 	);
 	  
   if( bError_Command )
 	BotErrorMessage(
 	  `written a command inside your command, which I can't tolerate` ,
-	  `not trying to let me execute a command inside your command`
+	  `not trying to let me execute a command inside your command the next time`
 	);
  
 }
@@ -168,11 +175,10 @@ function WaveMessage( sMessage ){
   
   }
   
-  for( let i = 1; i <= sMessage.length; i++ )
-    Send( sMessage.slice( 0, i ) );
+  
+  aMessageQueue.push( [ sMessage, sMessage.length, 'waveL', 1 ] );
 
-  for( let j = sMessage.length - 1; j > 0; j-- )
-	Send( sMessage.slice( 0, j ) );
+  aMessageQueue.push( [ sMessage, sMessage.length - 1, 'waveR', sMessage.length - 1 ] );
   
   if( bError )
 	  BotErrorMessage(
@@ -190,18 +196,17 @@ function CharMessage( sMessage ){
 	
   let bError = false;
 
-  let sM = sMessage.split( ' ' ).join( '' );
+  let sMessae = sMessage.split( ' ' ).join( '' );
 
-  if( sM.length > iChar_limit ){
+  if( sMessage.length > iChar_limit ){
 	
-	sM = sM.slice( 0, iChar_limit - 1 );
+	sMessage = sMessage.slice( 0, iChar_limit - 1 );
 	
 	bError = true;
   
   }
   
-  for( let i = 0; i < sM.length; i++ )
-    Send( sM[ i ] );
+  aMessageQueue.push( [ sMessage, sMessage.length, 'char', 0 ] );
   
   if( bError )
 	  BotErrorMessage(
@@ -332,8 +337,58 @@ setInterval(
 	  ProcessMessage( GetLatestMessage( ).split( '&amp;' ).join( '&' ) );
 	
     }
+	
+	//check the message queue and send the first 5 messages or do nothing
+	
+	if( aMessageQueue.toString != '' ){
+		
+	  let bQueue = ( aMessageQueue.toString() === '' )? false : true;
+		
+	  //I made a queue for the messages, so the bot doesn't have to send like 1000 messages in one for-loop,
+	  //which takes a damn long time to send. Now it just has a countdown to 0 and it sends one message every .25 seconds
+		
+	  for( let aI = 0; aI < 1; aI++ ){
+		
+		if( bQueue ){
+		
+	      if( aMessageQueue[0][1] > 0 ){
+	  	  
+		  //ways of sending for every case
+		  
+		    if( aMessageQueue[0][2] === undefined )
+	  	      Send( aMessageQueue[0][0] );
+		  
+		    else if( aMessageQueue[0][2] === 'char' )
+			  Send( aMessageQueue[0][0][ aMessageQueue[0][3]++ ] );
+			
+			else if( aMessageQueue[0][2] === 'waveL' )
+			  Send( aMessageQueue[0][0].slice( 0, aMessageQueue[0][3]++ ) );
+			  
+			else if( aMessageQueue[0][2] === 'waveR' )
+		      Send( aMessageQueue[0][0].slice( 0, aMessageQueue[0][3]-- ) );			
+	  	   
+	  	    aMessageQueue[0][1]--;
+		    
+			//remove the sub array when it is done sending
+		  
+		    if( aMessageQueue[0][1] === 0 ){
+		  
+		      aMessageQueue.shift();
+		  
+		      if( aMessageQueue.toString() === '' )
+			    bQueue = false;
+		  
+		    }   
+		  
+		  }
+		
+		}
+		
+	  }
+	  
+	}
   
-  }, 500
+  }, 250
 
 );
 
