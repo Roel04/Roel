@@ -345,7 +345,7 @@ function Main( ){
   
   let chatName = document.querySelector( "#main > header > div[role='button'] > div > div > span[dir='auto']" ).innerHTML;
   
-  Send( `The bot 'Botje' is set up and bound to the chat: "${chatName}".\nUse !help to see the commands you can use.\nCreated by Roel` );
+  Send( `The bot 'Botje' is set up and bound to the chat: "${chatName}".\nUse !help to see the commands you can use.\nDownload me at https://github.com/Roel04/Roel/blob/master/WhatsAppBot.js.\nCreated by Roel` );
   
 }
 
