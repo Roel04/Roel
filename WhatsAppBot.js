@@ -76,6 +76,9 @@ function ShowHelpMenu( NO_ARGUMENTS ){
  
 function ChangePrefix( sNewPrefix ){
   
+  if( sNewPrefix === '' )
+	sNewPrefix = '!';
+  
   Send( `The prefix has changed from "${ sPrefix }" to "${ sNewPrefix.split(' ').join('').toLowerCase() }"` );
   
   sPrefix = ( sNewPrefix != '' )? sNewPrefix.split(' ').join('').toLowerCase() : sPrefix;
@@ -102,6 +105,9 @@ function ShowShortcuts( NO_ARGUMENTS ){
 /////////////////////////   Spam function  /////////////////////////
 
 function SpamMessage( sMessage_and_iIterations ){
+  
+  if( sMessage_and_iIterations === '' )
+	sMessage_and_iIterations = 'This is a spam message. 10';
   
   let bError_Iterations = false;
   let bError_Command = false;
@@ -165,6 +171,9 @@ function SpamMessage( sMessage_and_iIterations ){
 
 function WaveMessage( sMessage ){
 	
+  if( sMessage === '' )
+	sMessage = 'Wave message';
+	
   let bError = false;
   
   if( sMessage.length > iChar_limit ){
@@ -193,6 +202,9 @@ function WaveMessage( sMessage ){
 /////////////////////////   Char message function   /////////////////////////
 
 function CharMessage( sMessage ){
+	
+  if( sMessage === '' )
+	sMessage = 'Message.';
 	
   let bError = false;
 
