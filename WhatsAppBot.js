@@ -9,7 +9,7 @@ class FunctionObject {
   SpamMessage	( sMsg_and_iIt ){	SpamMessage( sMsg_and_iIt );	}
   WaveMessage	( sMessage ){		WaveMessage( sMessage );		}
   CharMessage	( sMessage ){		CharMessage( sMessage );		}
-  
+  StopSpamming  ( NO_AGRUMENTS ){	StopSpamming( );				}  
 }
 
 
@@ -28,9 +28,10 @@ const aFunctions =
   [ "[p]help" , "" , "Show this menu" , [ "[p]h" ] ],
   [ "[p]prefix" , "[new prefix]" , "Change the prefix", [ "[p]pre" , "[p]p" ] ],
   [ "[p]shortcuts" , "" , "Show the shortcut of every command" , [ "[p]short" ] ],
-  [ "[p]spam" , "[message] [amount of times {max = "+iIt_limit+"}]" , "Spam a message an x amount of times" , [ "[p]s" ] ],
+  [ "[p]spam" , "[message] [amount of times {max = "+iIt_limit+"}]" , "Spam a message an x amount of times" , [ "[p]sp" ] ],
   [ "[p]wave" , "[message {max length = "+iChar_limit+"}]" , "Send a message like a wave" , [ "[p]w" ] ],
-  [ "[p]char" , "[message {max length = "+iChar_limit+"}]" , "Send a message for every char" , [ "[p]ch" ] ]
+  [ "[p]char" , "[message {max length = "+iChar_limit+"}]" , "Send a message for every char" , [ "[p]ch" ] ],
+  [ "[p]stop" , "" , "Empties the spam queue" , [ "[p]s" ] ]
 ];
 
 const aCallFuncs = 
@@ -38,22 +39,11 @@ const aCallFuncs =
   [ "help" , "h" , "ShowHelpMenu" ],
   [ "prefix" , "pre" , "p" , "ChangePrefix" ],
   [ "shortcuts" , "short" , "ShowShortcuts" ],
-  [ "spam" , "s" , "SpamMessage" ],
+  [ "spam" , "sp" , "SpamMessage" ],
   [ "wave" , "w" , "WaveMessage" ],
-  [ "char" , "ch" , "CharMessage" ]
+  [ "char" , "ch" , "CharMessage" ],
+  [ "stop" , "s" , "StopSpamming" ]
 ];
-
-
-
-/////////////////////////   Prefix Stuff   /////////////////////////
-
-function BotErrorMessage( sError , sSolution ){
-  
-  /*Send( 
-    `*Botje says*: _"Woooops, it looks like you have ${ sError }. You can prevent this by ${ sSolution }. Sorry for the inconvenience."_` 
-  );*/
-  
-}
 
 
 
@@ -108,15 +98,9 @@ function SpamMessage( sMessage_and_iIterations ){
   
   if( sMessage_and_iIterations === '' )
 	sMessage_and_iIterations = 'This is a spam message. 10';
-  
-  let bError_Iterations = false;
-  let bError_Command = false;
     
-  if( sMessage_and_iIterations.split( ' ' ).length === 1 || !(/\d/.test( sMessage_and_iIterations[ sMessage_and_iIterations.length - 1 ] ) ) ){
-	
+  if( sMessage_and_iIterations.split( ' ' ).length === 1 || !(/\d/.test( sMessage_and_iIterations[ sMessage_and_iIterations.length - 1 ] ) ) )
 	sMessage_and_iIterations += ' 10';
-	
-  }
 	
   let sSpaces = sMessage_and_iIterations.split( ' ' );
   
@@ -126,42 +110,16 @@ function SpamMessage( sMessage_and_iIterations ){
   
   let iIterations = sMessage_and_iIterations.slice( iSpaces );
   
-  if( iIterations > iIt_limit ){
-	  
-	  iIterations = iIt_limit;
-	  
-	  bError_Iterations = true;
-	  
-  }
+  if( iIterations > iIt_limit )
+	iIterations = iIt_limit;
   
-  for( let aA of aCallFuncs ){
-	for( let sB of aA ){
-	  if( new RegExp( sPrefix + sB , ).test( sMessage.toLowerCase( ) ) ){
-		
+  for( let aA of aCallFuncs )
+	for( let sB of aA )
+	  if( new RegExp( sPrefix + sB , ).test( sMessage.toLowerCase( ) ) )
 		sMessage = sMessage.split( sPrefix + sB ).join( sB );
-		
-		bError_Command = true;
-		
-	  }	
-
-	}	  
-
-  }
 		
 
   aMessageQueue.push( [sMessage, iIterations] );
- 
-  if( bError_Iterations )
-	BotErrorMessage( 
-	  `exeeded the iteration limit of ${ iIt_limit } or didn' enter a number` , 
-	  `entering a number below ${ iIt_limit } the next time`
-	);
-	  
-  if( bError_Command )
-	BotErrorMessage(
-	  `written a command inside your command, which I can't tolerate` ,
-	  `not trying to let me execute a command inside your command the next time`
-	);
  
 }
 
@@ -173,27 +131,13 @@ function WaveMessage( sMessage ){
 	
   if( sMessage === '' )
 	sMessage = 'Wave message';
-	
-  let bError = false;
   
-  if( sMessage.length > iChar_limit ){
-	
-	sMessage = sMessage.slice( 0, iChar_limit - 1 );
-	
-	bError = true;
-  
-  }
-  
+  if( sMessage.length > iChar_limit )
+	sMessage = sMessage.slice( 0, iChar_limit - 1 );  
   
   aMessageQueue.push( [ sMessage, sMessage.length, 'waveL', 1 ] );
 
   aMessageQueue.push( [ sMessage, sMessage.length - 1, 'waveR', sMessage.length - 1 ] );
-  
-  if( bError )
-	  BotErrorMessage(
-	  `exeeded the character limit of ${iChar_limit}` ,
-	  `writing shorter messages`
-	);
   
 }
 
@@ -205,26 +149,25 @@ function CharMessage( sMessage ){
 	
   if( sMessage === '' )
 	sMessage = 'Message.';
-	
-  let bError = false;
 
   let sMessae = sMessage.split( ' ' ).join( '' );
 
-  if( sMessage.length > iChar_limit ){
-	
+  if( sMessage.length > iChar_limit )
 	sMessage = sMessage.slice( 0, iChar_limit - 1 );
-	
-	bError = true;
-  
-  }
   
   aMessageQueue.push( [ sMessage, sMessage.length, 'char', 0 ] );
   
-  if( bError )
-	  BotErrorMessage(
-	  `exeeded the character limit of ${iChar_limit}` ,
-	  `writing shorter messages`
-	);
+}
+
+
+
+/////////////////////////   Stop Spamming   /////////////////////////
+
+function StopSpamming( ){
+  
+  aMessageQueue = [];
+  
+  Send( "
   
 }
 
@@ -273,18 +216,7 @@ function ProcessMessage( sMessage ){
     //call the command's function
     let callFunction = new FunctionObject();
 	
-	try {
-	
-      callFunction[ sCommand ]( sArgument );
-	
-	} catch( e ){
-	  
-	  BotErrorMessage( 
-	    'entered a wrong command' , 
-		'writing the command correctly' 
-	  );
-	
-	}
+	callFunction[ sCommand ]( sArgument );
 	
   }
   
@@ -408,11 +340,17 @@ setInterval(
 
 /////////////////////////   Main function   /////////////////////////
 
+let sChatName = "";
+
+let sBotName = "";
+
 function Main( ){
+	
+  sBotName = 'Botje';
   
-  let chatName = document.querySelector( "#main > header > div[role='button'] > div > div > span[dir='auto']" ).innerHTML;
+  sChatName = document.querySelector( "#main > header > div[role='button'] > div > div > span[dir='auto']" ).innerHTML;
   
-  Send( `The bot 'Botje' is set up and bound to the chat: "${chatName}".\nUse !help to see the commands you can use.\nDownload me at https://github.com/Roel04/Roel/blob/master/WhatsAppBot.js.\nCreated by Roel` );
+  Send( `The bot '${sBotName}' is set up and bound to the chat: "${sChatName}".\nUse !help to see the commands you can use.\nDownload me at https://github.com/Roel04/Roel/blob/master/WhatsAppBot.js.\nCreated by Roel` );
   
 }
 
