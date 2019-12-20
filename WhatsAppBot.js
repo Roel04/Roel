@@ -167,7 +167,7 @@ function StopSpamming( ){
   
   aMessageQueue = [];
   
-  Send( "
+  Send( `${sBotName} has cleared the spamlist successfully` );
   
 }
 
@@ -263,7 +263,7 @@ function GetLatestMessageTime( ){
 /////////////////////////   Check if a new message is send   /////////////////////////
 
 // sOldText contains the innerHTML of the loaded messages as a string
-let sOldText = document.querySelector( "#main > div > div > div" ).innerHTML;
+let sOldText = "";
 
 // CheckForNewMessage checks if the old loaded messages are the same as the new ones
 // and if not, it will process the new message
@@ -345,6 +345,8 @@ let sChatName = "";
 let sBotName = "";
 
 function Main( ){
+  
+  sOldText = document.querySelector( "#main > div > div > div" ).innerHTML;
 	
   sBotName = 'Botje';
   
